@@ -47,8 +47,6 @@ let dots = [], powerDots = [];
 let pacman = { x: 14, y: 23, dir: 0, nextDir: 0, mouth: 0 };
 let ghosts = [];
 let gameLoop;
-let heart = null;  // Heart item
-let heartTimer = null;  // Timer to spawn heart
 
 function init() {
     canvas = document.getElementById('gameCanvas');
@@ -63,41 +61,6 @@ function init() {
     };
     resetGame();
     draw();
-}
-
-function getEmptyPositions() {
-    let positions = [];
-    for (let y = 0; y < ROWS; y++) {
-        for (let x = 0; x < COLS; x++) {
-            if (MAZE[y][x] !== 0) {
-                positions.push({x, y});
-            }
-        }
-    }
-    return positions;
-}
-
-function spawnHeart() {
-    const emptyPositions = getEmptyPositions();
-    // Filter out positions where ghosts or pacman are
-    const validPositions = emptyPositions.filter(p => {
-        return !ghosts.some(g => g.x === p.x && g.y === p.y) &&
-               !(pacman.x === p.x && pacman.y === p.y);
-    });
-    
-    if (validPositions.length > 0) {
-        heart = validPositions[Math.floor(Math.random() * validPositions.length)];
-    }
-}
-
-function scheduleHeart() {
-    // Random 5-10 seconds
-    const delay = 5000 + Math.random() * 5000;
-    heartTimer = setTimeout(() => {
-        if (gameRunning) {
-            spawnHeart();
-        }
-    }, delay);
 }
 
 function resetGame() {
@@ -115,7 +78,6 @@ function resetGame() {
         {x: 15, y: 14, dir: 3, color: GHOST_COLORS[3]}
     ];
     pacman.x = 14; pacman.y = 23; pacman.dir = 0;
-    heart = null;
 }
 
 function canMove(x, y, d) {
@@ -165,13 +127,6 @@ function update() {
             score += 50;
             updateUI();
         }
-    }
-    
-    // Collect heart
-    if (heart && heart.x === pacman.x && heart.y === pacman.y) {
-        lives++;
-        updateUI();
-        heart = null;
     }
     
     // Ghosts move
@@ -245,13 +200,6 @@ function draw() {
     ctx.lineTo(pacman.x * TILE + 10, pacman.y * TILE + 10);
     ctx.fill();
     
-    // Heart
-    if (heart) {
-        ctx.fillStyle = '#ff0000';
-        ctx.font = '16px Arial';
-        ctx.fillText('♥', heart.x * TILE + 2, heart.y * TILE + 16);
-    }
-    
     // Ghosts
     ghosts.forEach(g => {
         ctx.fillStyle = g.color;
@@ -287,9 +235,6 @@ function startGame() {
     score = 0;
     lives = 3;
     gameRunning = true;
-    heart = null;
-    if (heartTimer) clearTimeout(heartTimer);
-    scheduleHeart();
     updateUI();
     document.getElementById('startBtn').textContent = 'RESTART';
     
